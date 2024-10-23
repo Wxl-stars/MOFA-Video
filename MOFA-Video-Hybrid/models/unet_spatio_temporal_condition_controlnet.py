@@ -10,7 +10,7 @@ from diffusers.utils import BaseOutput, logging
 from diffusers.models.attention_processor import CROSS_ATTENTION_PROCESSORS, AttentionProcessor, AttnProcessor
 from diffusers.models.embeddings import TimestepEmbedding, Timesteps
 from diffusers.models.modeling_utils import ModelMixin
-from diffusers.models.unet_3d_blocks import UNetMidBlockSpatioTemporal, get_down_block, get_up_block
+from diffusers.models.unets.unet_3d_blocks import UNetMidBlockSpatioTemporal, get_down_block, get_up_block
 
 
 logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
@@ -355,11 +355,11 @@ class UNetSpatioTemporalConditionControlNetModel(ModelMixin, ConfigMixin, UNet2D
 
     def forward(
         self,
-        sample: torch.FloatTensor,
+        sample: torch.FloatTensor,  # noise
         timestep: Union[torch.Tensor, float, int],
-        encoder_hidden_states: torch.Tensor,
-        down_block_additional_residuals: Optional[Tuple[torch.Tensor]] = None,
-        mid_block_additional_residual: Optional[torch.Tensor] = None,
+        encoder_hidden_states: torch.Tensor,  # image embedding
+        down_block_additional_residuals: Optional[Tuple[torch.Tensor]] = None,  # down 光流
+        mid_block_additional_residual: Optional[torch.Tensor] = None,  # mid 光流
         return_dict: bool = True,
         added_time_ids: torch.Tensor=None,
     ) -> Union[UNetSpatioTemporalConditionOutput, Tuple]:

@@ -10,7 +10,7 @@ cv2.ocl.setUseOpenCL(False)
 def get_edge(data, blur=False):
     if blur:
         data = cv2.GaussianBlur(data, (3, 3), 1.)
-    sobel = np.array([[1,0,-1],[2,0,-2],[1,0,-1]]).astype(np.float32)
+    sobel = np.array([[1,0,-1],[2,0,-2],[1,0,-1]]).astype(np.float32)  # 边缘检测算子
     ch_edges = []
     for k in range(data.shape[2]):
         edgex = signal.convolve2d(data[:,:,k], sobel, boundary='symm', mode='same')
@@ -161,17 +161,17 @@ def flow_sampler(flow, strategy=['grid'], bg_ratio=1./6400, nms_ks=15, max_num_g
     pts_w = []
     if 'grid' in strategy:
         stride = int(np.sqrt(1./bg_ratio))
-        mesh_start_h = int((h - h // stride * stride) / 2)
+        mesh_start_h = int((h - h // stride * stride) / 2)  # 确保能从被整除的地方开始
         mesh_start_w = int((w - w // stride * stride) / 2)
         mesh = np.meshgrid(np.arange(mesh_start_h, h, stride), np.arange(mesh_start_w, w, stride))
-        pts_h.append(mesh[0].flat)
+        pts_h.append(mesh[0].flat)  # 将多维数组视为一维的迭代器
         pts_w.append(mesh[1].flat)
     if 'uniform' in strategy:
         pts_h.append(np.random.randint(0, h, int(bg_ratio * h * w)))
         pts_w.append(np.random.randint(0, w, int(bg_ratio * h * w)))
     if "gradnms" in strategy:
         ks = w // ds // 20
-        edge = get_edge(flow[::ds,::ds,:])
+        edge = get_edge(flow[::ds,::ds,:])  # 边缘图
         kernel = np.ones((ks, ks), dtype=np.float32) / (ks * ks)
         subkernel = np.ones((ks//2, ks//2), dtype=np.float32) / (ks//2 * ks//2)
         score = signal.convolve2d(edge, kernel, boundary='symm', mode='same')
@@ -182,7 +182,7 @@ def flow_sampler(flow, strategy=['grid'], bg_ratio=1./6400, nms_ks=15, max_num_g
         pts_h.append(pth * ds)
         pts_w.append(ptw * ds)
     if "watershed" in strategy:
-        edge = get_edge(flow[::ds,::ds,:])
+        edge = get_edge(flow[::ds,::ds,:])  # 边缘图
         edge /= max(edge.max(), 0.01)
         edge = (edge > 0.1).astype(np.float32)
         watershed = ndimage.distance_transform_edt(1-edge)

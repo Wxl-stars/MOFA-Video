@@ -104,7 +104,8 @@ def load_state(path, model, optimizer=None):
         # print(ckpt_keys)
         # print(own_keys)
         for k in missing_keys:
-            print('caution: missing keys from checkpoint {}: {}'.format(path, k))
+            if "um_batches_tracked" not in k:
+                print('caution: missing keys from checkpoint {}: {}'.format(path, k))
 
         last_iter = checkpoint['step']
         if optimizer != None:

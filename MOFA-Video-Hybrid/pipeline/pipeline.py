@@ -91,9 +91,9 @@ class FlowControlNetPipeline(DiffusionPipeline):
     _callback_tensor_inputs = ["latents"]
     def __init__(
         self,
-        vae: AutoencoderKLTemporalDecoder,
-        image_encoder: CLIPVisionModelWithProjection,
-        unet: UNetSpatioTemporalConditionControlNetModel,
+        vae: AutoencoderKLTemporalDecoder,  # 只用了vae的decoder
+        image_encoder: CLIPVisionModelWithProjection,  # 用clip作为vae的decoder
+        unet: UNetSpatioTemporalConditionControlNetModel,  # diffusion model
         drag_controlnet: DragControlNet,
         face_controlnet: FaceControlNet,
         scheduler: EulerDiscreteScheduler,

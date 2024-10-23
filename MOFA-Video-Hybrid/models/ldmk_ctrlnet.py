@@ -321,11 +321,11 @@ class FlowControlNet(ControlNetSDVModel):
    
     def forward(
         self,
-        sample: torch.FloatTensor,
+        sample: torch.FloatTensor,  # noise cat vae(img)
         timestep: Union[torch.Tensor, float, int],
-        encoder_hidden_states: torch.Tensor,
+        encoder_hidden_states: torch.Tensor,  # clip(img)
         added_time_ids: torch.Tensor,
-        controlnet_cond: torch.FloatTensor = None,  # [b, 3, h, w]
+        controlnet_cond: torch.FloatTensor = None,  # [b, 3, h, w]  # input image[b, 3, h, w]
         controlnet_flow: torch.FloatTensor = None,  # [b, 13, 2, h, w]
         landmarks: torch.FloatTensor = None,  # [b, 14, 2, h, w]
         # controlnet_mask: torch.FloatTensor = None,  # [b, 13, 2, h, w]
