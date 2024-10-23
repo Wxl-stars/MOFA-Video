@@ -19,6 +19,7 @@ from __future__ import print_function
 import numpy as np
 from PIL import Image
 import torch
+import cv2
 
 
 def make_colorwheel():
@@ -236,6 +237,43 @@ def compute_color(u, v):
 
     return img
 
+def flow_to_arrow(im, flow):
+    # 在间隔分开的像素采样点处绘制光流
+    step = 1
+    norm = 0
+    h, w = im.shape[:2]
+    y, x = np.mgrid[step/2:h:step, step/2:w:step].reshape(2, -1).astype(int)
+    if norm:
+        fx, fy = flow[y, x].T / abs(flow[y, x]).max() * step // 2
+    else:
+        fx, fy = flow[y, x].T  # / flow[y, x].max() * step // 2
+    # 创建线的终点
+    ex = x + fx
+    ey = y + fy
+    lines = np.vstack([x, y, ex, ey]).T.reshape(-1, 2, 2)
+    lines = lines.astype(int)
+    # 创建图像并绘制
+    vis = im.astype(np.uint8)  #cv2.cvtColor(im, cv2.COLOR_GRAY2BGR)
+    for (x1, y1), (x2, y2) in lines:
+        if x1 != x2:
+            try:
+                cv2.line(vis, (x1, y1), (x2, y2), (0, 255, 0), 2)  # green
+            except:
+                # print(x1, y1, x2, y2)
+                pass
+            cv2.circle(vis, (x1, y1), 2, (0, 0, 255), -1)  # red
+    # cv2.imwrite("vis_img_a.png", vis)
+    return vis
+
+def save_gif(images, key):
+    """
+    images: N, h, w, c numpy
+    """
+    images = [Image.fromarray(cv2.cvtColor(img.astype(np.uint8), cv2.COLOR_BGR2RGB)) for img in images]
+    images = [img.convert('RGBA') for img in images]
+    images[0].save(f'{key}.gif',
+        save_all=True, append_images=images[1:],
+        optimize=False, duration=400, loop=0)
 
 # from https://github.com/gengshan-y/VCN
 def flow_to_image(flow):
@@ -252,6 +290,7 @@ def flow_to_image(flow):
     # minu = 999.
     # minv = 999.
 
+    # 处理未知光流：
     idxUnknow = (abs(u) > UNKNOWN_FLOW_THRESH) | (abs(v) > UNKNOWN_FLOW_THRESH)
     u[idxUnknow] = 0
     v[idxUnknow] = 0
@@ -262,14 +301,18 @@ def flow_to_image(flow):
     # maxv = max(maxv, np.max(v))
     # minv = min(minv, np.min(v))
 
+    # 计算光流的幅度：
     rad = torch.sqrt(u ** 2 + v ** 2)
+    # 归一化
     maxrad = max(-1, torch.max(rad).cpu().numpy())
 
     u = u / (maxrad + np.finfo(float).eps)
     v = v / (maxrad + np.finfo(float).eps)
 
+    # 将光流方向和大小转换为颜色编码图
     img = compute_color(u.cpu().numpy(), v.cpu().numpy())
 
+    # 扩展为一个三维数组
     idx = np.repeat(idxUnknow[:, :, np.newaxis].cpu().numpy(), 3, axis=2)
     img[idx] = 0
 
